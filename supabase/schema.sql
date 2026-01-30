@@ -64,6 +64,5 @@ INSERT INTO items (id, name) VALUES
   ('ITEM_05', '네임펜')
 ON CONFLICT (id) DO NOTHING;
 
--- PostgREST schema cache 갱신 (필요한 경우)
--- 일부 환경에서 테이블 생성 직후 PGRST205가 잠깐 발생할 수 있어, 아래를 실행하면 즉시 갱신됩니다.
--- NOTIFY pgrst, 'reload schema';
+-- PostgREST schema cache 갱신 (PGRST205 방지: 새 테이블을 API에서 바로 인식하도록 함)
+NOTIFY pgrst, 'reload schema';

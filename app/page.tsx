@@ -73,6 +73,28 @@ export default function HomePage() {
     return parts.join(' | ');
   };
 
+  /** Supabase errors often don't serialize to console; copy all readable props into a plain object. */
+  const toLoggableError = (err: unknown): Record<string, unknown> => {
+    if (err == null) return { message: String(err) };
+    if (err instanceof Error)
+      return { name: err.name, message: err.message, stack: err.stack };
+    const e = err as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    const knownKeys = ['message', 'error', 'details', 'hint', 'code'];
+    const ownKeys = Object.getOwnPropertyNames(Object(e));
+    for (const k of [...new Set([...knownKeys, ...ownKeys])]) {
+      if (k === 'constructor') continue;
+      try {
+        const v = e[k];
+        if (v !== undefined) out[k] = v;
+      } catch {
+        // skip getters that throw
+      }
+    }
+    if (Object.keys(out).length === 0) out.raw = String(err);
+    return out;
+  };
+
   const loadEmployees = async () => {
     try {
       if (!hasSupabaseEnv) return;
@@ -84,20 +106,14 @@ export default function HomePage() {
       if (error) {
         const msg = formatSupabaseError('employees.select', error);
         setSupabaseLoadError(msg);
-        console.error('Failed to load employees:', {
-          error,
-          message: (error as any)?.message,
-          details: (error as any)?.details,
-          hint: (error as any)?.hint,
-          code: (error as any)?.code,
-        });
+        console.error('Failed to load employees:', toLoggableError(error));
         return;
       }
       if (data) setEmployees(data as Employee[]);
     } catch (error) {
       const msg = formatSupabaseError('employees.select.catch', error);
       setSupabaseLoadError(msg);
-      console.error('Failed to load employees:', error);
+      console.error('Failed to load employees:', toLoggableError(error));
     }
   };
 
@@ -111,20 +127,14 @@ export default function HomePage() {
       if (error) {
         const msg = formatSupabaseError('items.select', error);
         setSupabaseLoadError(msg);
-        console.error('Failed to load items:', {
-          error,
-          message: (error as any)?.message,
-          details: (error as any)?.details,
-          hint: (error as any)?.hint,
-          code: (error as any)?.code,
-        });
+        console.error('Failed to load items:', toLoggableError(error));
         return;
       }
       if (data) setItems(data as ItemRow[]);
     } catch (error) {
       const msg = formatSupabaseError('items.select.catch', error);
       setSupabaseLoadError(msg);
-      console.error('Failed to load items:', error);
+      console.error('Failed to load items:', toLoggableError(error));
     }
   };
 
@@ -145,13 +155,7 @@ export default function HomePage() {
       if (error) {
         const msg = formatSupabaseError('rentals.select', error);
         setSupabaseLoadError(msg);
-        console.error('Failed to load rentals:', {
-          error,
-          message: (error as any)?.message,
-          details: (error as any)?.details,
-          hint: (error as any)?.hint,
-          code: (error as any)?.code,
-        });
+        console.error('Failed to load rentals:', toLoggableError(error));
         return;
       }
       if (data) {
@@ -160,7 +164,7 @@ export default function HomePage() {
     } catch (error) {
       const msg = formatSupabaseError('rentals.select.catch', error);
       setSupabaseLoadError(msg);
-      console.error('Failed to load rentals:', error);
+      console.error('Failed to load rentals:', toLoggableError(error));
     }
   };
 
